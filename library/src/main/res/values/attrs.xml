@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PackageGift">
+        <attr name="controlOneX" format="integer" />
+        <attr name="controlOneY" format="integer" />
+        <attr name="controlTwoX" format="integer" />
+        <attr name="controlTwoY" format="integer" />
+        <attr name="endPointX" format="integer" />
+        <attr name="endPointY" format="integer" />
+        <attr name="giftCount" format="integer" />
+    </declare-styleable>
+</resources>
