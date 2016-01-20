@@ -2,12 +2,15 @@ package com.dreamer.library;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.dreamer.library.curve.PathEvaluator;
 import com.dreamer.library.curve.PathPoint;
 import com.dreamer.library.utils.Utils;
+import com.nineoldandroids.animation.Animator;
+import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.nineoldandroids.animation.ValueAnimator;
@@ -21,6 +24,7 @@ public class Gift extends ImageView {
     private AnimatorSet set;
     private PathPoint beginPoint;
     private PathPoint pathPoint;
+    private AnimatorListener animatorListener;
 
     public Gift(Context context) {
         this(context, null);
@@ -61,6 +65,16 @@ public class Gift extends ImageView {
         ValueAnimator scaleYAnimator = ObjectAnimator.ofFloat(this, "scaleY", 0, 1);
         scaleYAnimator.setDuration(duration);
         set.playTogether(objectAnimator, alphaAnimator, scaleXAnimator, scaleYAnimator);
+        set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                if (animatorListener != null) {
+                    animatorListener.onAnimationEnd(Gift.this);
+                }
+            }
+        });
+        set.setInterpolator(new AccelerateInterpolator());
     }
 
     public void start() {
@@ -69,9 +83,21 @@ public class Gift extends ImageView {
         }
     }
 
+    public boolean isRunning(){
+        return set.isRunning();
+    }
+
     public void setPathPoint(PathPoint beginPoint, PathPoint pathPoint) {
         this.beginPoint = beginPoint;
         this.pathPoint = pathPoint;
         initAnimator();
+    }
+
+    public void addListener(AnimatorListener animatorListener) {
+        this.animatorListener = animatorListener;
+    }
+
+    public interface AnimatorListener{
+        void onAnimationEnd(Gift gift);
     }
 }

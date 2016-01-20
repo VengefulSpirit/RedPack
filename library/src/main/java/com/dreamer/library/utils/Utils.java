@@ -29,6 +29,22 @@ public class Utils {
     }
 
     /**
+     * 获取区间随机数
+     * @param min
+     * @param max
+     * @return
+     */
+    public static int nextInt(final int min, final int max) {
+        if (max < min) {
+            return 0;
+        }
+        if (min == max) {
+            return min;
+        }
+        return min + ((max - min) * new Random().nextInt());
+    }
+
+    /**
      * 获取屏幕宽度（像素）
      * @param ctx
      * @return

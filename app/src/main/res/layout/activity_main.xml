@@ -11,33 +11,29 @@
     tools:context="com.dreamer.redpack.MainActivity">
 
     <com.dreamer.library.Package
+        android:id="@+id/pack"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        gift:giftCount="2">
+        gift:giftCount="20" />
 
-        <!--<com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-        <com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-        <com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-        <com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-        <com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-        <com.dreamer.library.Gift
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>-->
-    </com.dreamer.library.Package>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/start"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="开始"/>
+
+        <Button
+            android:id="@+id/stop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="停止"/>
+    </LinearLayout>
 </RelativeLayout>
