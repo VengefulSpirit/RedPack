@@ -1,7 +1,10 @@
 package com.dreamer.library;
 
 import android.content.Context;
+import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -21,7 +24,15 @@ import com.nineoldandroids.animation.ValueAnimator;
  * 详情：
  */
 public class Gift extends ImageView {
-    private AnimatorSet set;
+    private final int controlGap = 50;
+    private final int controlTopMin = 200;
+    private final int controlTop = 300;
+    private final int controlBottomMin = 200;
+    private final int controlBottom = 300;
+    private final int controlLeft = 200;        //控制点左区间
+    private final int controlRight = 200;       //控制点右区间
+
+    private AnimatorSet set = new AnimatorSet();
     private PathPoint beginPoint;
     private PathPoint pathPoint;
     private AnimatorListener animatorListener;
@@ -36,10 +47,10 @@ public class Gift extends ImageView {
 
     public Gift(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        set = new AnimatorSet();
     }
 
-    private void initAnimator() {
+    private void resetAnimator() {
+        set = new AnimatorSet();
         long duration = (long) (Utils.nextFloat(3, 5) * 1000);
         ValueAnimator objectAnimator = new ValueAnimator();
         objectAnimator.setObjectValues(beginPoint, pathPoint);
@@ -49,7 +60,6 @@ public class Gift extends ImageView {
         objectAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                //更新坐标
                 PathPoint PathPoint = (PathPoint) animation.getAnimatedValue();
                 params.leftMargin = (int) PathPoint.getCurrent().x;
                 params.topMargin = (int) PathPoint.getCurrent().y;
@@ -59,10 +69,10 @@ public class Gift extends ImageView {
         ValueAnimator alphaAnimator = ObjectAnimator.ofFloat(this, "alpha", 0, 1, 0);
         alphaAnimator.setDuration(duration);
 
-        ValueAnimator scaleXAnimator = ObjectAnimator.ofFloat(this, "scaleX", 0, 1);
+        ValueAnimator scaleXAnimator = ObjectAnimator.ofFloat(this, "scaleX", 0.2f, 1);
         scaleXAnimator.setDuration(duration);
 
-        ValueAnimator scaleYAnimator = ObjectAnimator.ofFloat(this, "scaleY", 0, 1);
+        ValueAnimator scaleYAnimator = ObjectAnimator.ofFloat(this, "scaleY", 0.2f, 1);
         scaleYAnimator.setDuration(duration);
         set.playTogether(objectAnimator, alphaAnimator, scaleXAnimator, scaleYAnimator);
         set.addListener(new AnimatorListenerAdapter() {
@@ -79,25 +89,49 @@ public class Gift extends ImageView {
 
     public void start() {
         if (set != null) {
+            pathPoint = createPath();
+            resetAnimator();
             set.start();
         }
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
+        if (set == null)
+            return false;
         return set.isRunning();
-    }
-
-    public void setPathPoint(PathPoint beginPoint, PathPoint pathPoint) {
-        this.beginPoint = beginPoint;
-        this.pathPoint = pathPoint;
-        initAnimator();
     }
 
     public void addListener(AnimatorListener animatorListener) {
         this.animatorListener = animatorListener;
     }
 
-    public interface AnimatorListener{
+    public interface AnimatorListener {
         void onAnimationEnd(Gift gift);
+    }
+
+    private PathPoint createPath() {
+        int parentW = ((View) getParent()).getWidth();
+        int parentH = ((View) getParent()).getHeight();
+        beginPoint = PathPoint.moveTo(new PointF((parentW - getLayoutParams().width) / 2, (parentH - getLayoutParams().height) / 2));
+        PointF controlOne = new PointF();   //控制点1的坐标
+        PointF controlTwo = new PointF();   //控制点2的坐标
+        PointF endPoint = new PointF();     //物品最终位置坐标
+        if (Utils.nextInt(-2, 2) > 0) {//左侧
+            controlOne.x = Utils.nextFloat(beginPoint.getCurrent().x - controlLeft, beginPoint.getCurrent().x);
+            controlOne.y = Utils.nextFloat(beginPoint.getCurrent().y - controlTop, beginPoint.getCurrent().y - controlTopMin);
+            controlTwo.x = controlOne.x - controlGap;
+            controlTwo.y = beginPoint.getCurrent().y;
+            endPoint.x = controlTwo.x - controlGap;
+            endPoint.y = Utils.nextFloat(beginPoint.getCurrent().y + controlBottomMin, beginPoint.getCurrent().y + controlBottom);
+        } else {//右侧
+            controlOne.x = Utils.nextFloat(beginPoint.getCurrent().x, beginPoint.getCurrent().x + controlRight);
+            controlOne.y = Utils.nextFloat(beginPoint.getCurrent().y - controlTop, beginPoint.getCurrent().y - controlTopMin);
+            controlTwo.x = controlOne.x + controlGap;
+            controlTwo.y = beginPoint.getCurrent().y;
+            endPoint.x = controlTwo.x + controlGap;
+            endPoint.y = Utils.nextFloat(beginPoint.getCurrent().y + controlBottomMin, beginPoint.getCurrent().y + controlBottom);
+        }
+        //Log.d(Tag, controlOne.x + "====" + controlOne.y + "====" + controlTwo.x + "====" + controlTwo.y + "====" + endPoint.x + "====" + endPoint.y);
+        return PathPoint.curveTo(controlOne, controlTwo, endPoint);
     }
 }

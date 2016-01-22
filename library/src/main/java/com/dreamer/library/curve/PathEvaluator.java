@@ -2,7 +2,6 @@ package com.dreamer.library.curve;
 
 
 import android.graphics.PointF;
-import android.util.Log;
 
 import com.nineoldandroids.animation.TypeEvaluator;
 
@@ -15,7 +14,6 @@ import com.nineoldandroids.animation.TypeEvaluator;
 public class PathEvaluator implements TypeEvaluator<PathPoint> {
     @Override
     public PathPoint evaluate(float t, PathPoint startValue, PathPoint endValue) {
-        //Log.e("test","1111");
         PointF pointF = new PointF();
         if (endValue.getOperation() == PathPoint.CURVE) {
             float oneMinusT = 1 - t;

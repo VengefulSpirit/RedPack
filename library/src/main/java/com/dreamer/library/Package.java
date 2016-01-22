@@ -2,14 +2,16 @@ package com.dreamer.library;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.PointF;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
-import com.dreamer.library.curve.PathPoint;
 import com.dreamer.library.utils.Utils;
 
 import java.util.Queue;
@@ -24,22 +26,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Package extends FrameLayout {
     private final String Tag = "Package";
     private final int start = 1;
-    private final int controlTopMin = 200;
-    private final int controlTop = 300;
-    private final int controlBottomMin = 200;
-    private final int controlBottom = 300;
-    private final int controlLeft = 200;        //控制点左区间
-    private final int controlRight = 200;       //控制点右区间
     private final int DefaultGiftCount = 1;
 
     private Queue<Gift> waitQueue = new LinkedBlockingQueue<>();
 
-    private PointF beginPoint = new PointF();   //起始点坐标
     private int poolSize = 20;
     private int giftCount;                      //物品个数
-
-    private PointF center;                      //二分之一点
     private boolean runAble = false;
+
+    private Paint paint;
+    private Thread task;
+    private boolean stop = false;
 
     public Package(Context context) {
         this(context, null);
@@ -53,14 +50,14 @@ public class Package extends FrameLayout {
         super(context, attrs, defStyleAttr);
         initAttrs(context, attrs);
         init(context);
+        setWillNotDraw(false);
     }
 
     private void init(Context context) {
-        int w = Utils.getDisplayWidth(context);
-        int h = Utils.getDisplayHeight(context);
-        center = new PointF(w / 2, h / 2);
-        beginPoint = center;
-        initGiftPool();
+        paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setStrokeWidth(2);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void initAttrs(Context context, AttributeSet attrs) {
@@ -78,7 +75,6 @@ public class Package extends FrameLayout {
             FrameLayout.LayoutParams giftParams = new LayoutParams(120, 120);
             gift.setLayoutParams(giftParams);
             gift.setImageResource(R.drawable.red_package);
-            gift.setPathPoint(PathPoint.moveTo(beginPoint), createPath());
             gift.addListener(new Gift.AnimatorListener() {
                 @Override
                 public void onAnimationEnd(Gift gift) {
@@ -95,36 +91,19 @@ public class Package extends FrameLayout {
         }
     }
 
-    private PathPoint createPath() {
-        PointF controlOne = new PointF();   //控制点1的坐标
-        PointF controlTwo = new PointF();   //控制点2的坐标
-        PointF endPoint = new PointF();     //物品最终位置坐标
-        if (Utils.nextInt(-2, 2) > 0) {//左侧
-            controlOne.x = Utils.nextFloat(beginPoint.x - controlLeft, beginPoint.x);
-            controlOne.y = Utils.nextFloat(beginPoint.y - controlTop, beginPoint.y - controlTopMin);
-            controlTwo.x = controlOne.x;
-            controlTwo.y = beginPoint.y;
-        } else {//右侧
-            controlOne.x = Utils.nextFloat(beginPoint.x, beginPoint.x + controlRight);
-            controlOne.y = Utils.nextFloat(beginPoint.y - controlTop, beginPoint.y - controlTopMin);
-            controlTwo.x = controlOne.x;
-            controlTwo.y = beginPoint.y;
-        }
-        endPoint.x = controlOne.x;
-        endPoint.y = Utils.nextFloat(beginPoint.y + controlBottomMin, beginPoint.y + controlBottom);
-        //Log.d(Tag, controlOne.x + "====" + controlOne.y + "====" + controlTwo.x + "====" + controlTwo.y + "====" + endPoint.x + "====" + endPoint.y);
-        return PathPoint.curveTo(controlOne, controlTwo, endPoint);
-    }
 
     public void start() {
-        if (giftCount == 0) {
+        if (giftCount == 0 || runAble) {
             return;
         }
-        new Thread(new Runnable() {
+        task = new Thread(new Runnable() {
             @Override
             public void run() {
                 runAble = true;
                 while (runAble) {
+                    if (stop) {
+                        return;
+                    }
                     if (waitQueue == null || waitQueue.size() == 0) {
                         continue;
                     }
@@ -146,7 +125,8 @@ public class Package extends FrameLayout {
                     }
                 }
             }
-        }).start();
+        });
+        task.start();
     }
 
     public void stop() {
@@ -161,8 +141,7 @@ public class Package extends FrameLayout {
                 case start:
                     Gift gift = (Gift) msg.obj;
                     Log.e(Tag, "handle---" + gift.toString());
-                    if (gift != null && !gift.isRunning()) {
-                        gift.setPathPoint(PathPoint.moveTo(beginPoint), createPath());
+                    if (!gift.isRunning()) {
                         if (gift.getParent() == null) {
                             addView(gift);
                         }
@@ -174,4 +153,24 @@ public class Package extends FrameLayout {
             }
         }
     };
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        Log.d(Tag,getWidth()+"====----------");
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        ImageView imageView = new ImageView(getContext());
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        initGiftPool();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stop = true;
+    }
 }
